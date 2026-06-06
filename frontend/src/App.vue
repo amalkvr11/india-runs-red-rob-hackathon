@@ -99,7 +99,7 @@ const routes = router.getRoutes()
 
 onMounted(() => {
   store.fetchWeights()
-  store.checkCache()
+  store.ensureLoaded()
 })
 
 function onFileSelect(e) {

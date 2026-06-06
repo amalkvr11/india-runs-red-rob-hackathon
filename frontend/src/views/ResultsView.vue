@@ -8,7 +8,13 @@
       <Select v-model="filters.honeypot.value" :options="honeyOptions" optionLabel="label" optionValue="value" placeholder="All" style="width: 160px" />
     </div>
 
-    <DataTable
+    <div v-if="!store.results" class="empty-state">
+      <i class="pi pi-spin pi-spinner" v-if="store.loading" style="font-size: 2rem"></i>
+      <i class="pi pi-database" v-else style="font-size: 2rem"></i>
+      <p>{{ store.loading ? 'Loading results...' : 'No results available' }}</p>
+      <Button v-if="!store.loading" label="Load Results" icon="pi pi-refresh" @click="store.ensureLoaded()" severity="info" size="small" />
+    </div>
+    <DataTable v-else
       :value="store.results"
       :filters="filters"
       paginator
@@ -77,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useRankerStore } from '../stores/ranker'
 import DataTable from 'primevue/datatable'
@@ -92,6 +98,10 @@ import Select from 'primevue/select'
 
 const store = useRankerStore()
 const router = useRouter()
+
+onMounted(() => {
+  store.ensureLoaded()
+})
 
 const filters = ref({
   global: { value: null, matchMode: 'contains' },
@@ -128,4 +138,7 @@ function goToDetail(e) {
 .score-bar { flex: 1; height: 6px; }
 .score-val { font-family: monospace; font-size: 0.8rem; font-weight: 600; min-width: 60px; text-align: right; }
 .honey-flag { color: var(--p-yellow-500); cursor: help; }
+.empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 4rem; color: var(--p-surface-600); }
+.empty-state i { opacity: 0.5; }
+.empty-state p { font-size: 0.95rem; }
 </style>

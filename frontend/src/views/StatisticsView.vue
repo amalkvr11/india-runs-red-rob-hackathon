@@ -10,7 +10,8 @@
       <Card>
         <template #title><i class="pi pi-map-marker"></i> Location Breakdown</template>
         <template #content>
-          <apexchart type="pie" height="320" :options="pieOptions" :series="pieSeries" />
+          <div v-if="!store.results?.length" class="empty-chart">No results loaded</div>
+          <apexchart v-else type="pie" height="320" :options="pieOptions" :series="pieSeries" />
         </template>
       </Card>
     </div>
@@ -151,4 +152,5 @@ const dimStatsData = computed(() => {
 .stats-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 @media (max-width: 900px) { .stats-charts-grid { grid-template-columns: 1fr; } }
 .dim-stats-table { font-size: 0.85rem; }
+.empty-chart { display: flex; align-items: center; justify-content: center; height: 320px; color: var(--p-surface-500); font-size: 0.9rem; }
 </style>

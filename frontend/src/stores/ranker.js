@@ -9,6 +9,7 @@ export const useRankerStore = defineStore('ranker', () => {
   const running = ref(false)
   const error = ref('')
   const cached = ref(false)
+  const loading = ref(false)
 
   const topScore = computed(() => results.value?.[0]?.score ?? 0)
   const bottomScore = computed(() => results.value?.[results.value.length - 1]?.score ?? 0)
@@ -57,6 +58,8 @@ export const useRankerStore = defineStore('ranker', () => {
   }
 
   async function checkCache() {
+    if (loading.value) return
+    loading.value = true
     try {
       const res = await fetch('/api/status')
       if (res.ok) {
@@ -71,12 +74,26 @@ export const useRankerStore = defineStore('ranker', () => {
           }
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('checkCache failed:', e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function ensureLoaded() {
+    if (results.value) return
+    if (loading.value) return
+    await checkCache()
+    // Retry once if still no results
+    if (!results.value && cached.value) {
+      await checkCache()
+    }
   }
 
   function getCandidate(id) {
     return results.value?.find(r => r.candidate_id === id) || null
   }
 
-  return { results, weights, stats, elapsed, running, error, cached, topScore, bottomScore, avgScore, fetchWeights, runRanking, checkCache, getCandidate }
+  return { results, weights, stats, elapsed, running, error, cached, loading, topScore, bottomScore, avgScore, fetchWeights, runRanking, checkCache, ensureLoaded, getCandidate }
 })

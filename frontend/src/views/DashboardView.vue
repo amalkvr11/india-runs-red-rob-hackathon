@@ -54,7 +54,8 @@
           <div class="card-header"><i class="pi pi-map-marker"></i> Top Locations</div>
         </template>
         <template #content>
-          <apexchart type="donut" height="300" :options="locOptions" :series="locSeries" />
+          <div v-if="!store.results?.length" class="empty-chart">No results loaded</div>
+          <apexchart v-else type="donut" height="300" :options="locOptions" :series="locSeries" />
         </template>
       </Card>
     </div>
@@ -246,4 +247,5 @@ const locOptions = computed(() => ({
 .honey-card { border: 1px solid var(--p-yellow-500); }
 .honey-inner { display: flex; align-items: center; gap: 1rem; }
 .honey-icon { font-size: 2rem; color: var(--p-yellow-500); }
+.empty-chart { display: flex; align-items: center; justify-content: center; height: 300px; color: var(--p-surface-500); font-size: 0.9rem; }
 </style>

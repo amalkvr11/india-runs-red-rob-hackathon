@@ -85,13 +85,25 @@
     </Card>
   </div>
   <div v-else class="empty-detail">
-    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-    <p>Candidate not found</p>
+    <template v-if="store.loading">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+      <p>Loading candidates...</p>
+    </template>
+    <template v-else-if="!store.results">
+      <i class="pi pi-database" style="font-size: 2rem"></i>
+      <p>No candidate data loaded</p>
+      <Button label="Load Results" icon="pi pi-refresh" @click="store.ensureLoaded()" severity="info" />
+    </template>
+    <template v-else>
+      <i class="pi pi-exclamation-circle" style="font-size: 2rem"></i>
+      <p>Candidate not found in results</p>
+      <Button label="Go to Results" icon="pi pi-arrow-left" @click="router.push('/results')" severity="info" />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRankerStore } from '../stores/ranker'
 import Card from 'primevue/card'
@@ -106,6 +118,11 @@ import Message from 'primevue/message'
 const route = useRoute()
 const router = useRouter()
 const store = useRankerStore()
+
+// Ensure results are loaded before rendering
+onMounted(() => {
+  store.ensureLoaded()
+})
 
 const candidate = computed(() => store.getCandidate(route.params.id))
 
