@@ -1,0 +1,55 @@
+submission_name: "Redrob Candidate Ranker — Senior AI Engineer"
+team_name: "Redrob Ranker"
+description: >
+  Multi-dimensional scoring pipeline that evaluates 100K+ candidates for a
+  Senior AI Engineer role (Series A startup, embeddings/vector search focus).
+  Uses 8 weighted dimensions plus honeypot fraud detection.
+
+scoring_dimensions:
+  - name: title_role
+    weight: 0.22
+    description: "Current title match against AI/ML role tiers"
+  - name: skills
+    weight: 0.18
+    description: "Skill relevance to embeddings, vector DB, NLP, ML frameworks, data infra"
+  - name: career_quality
+    weight: 0.18
+    description: "Tenure stability, career progression, production exposure, company diversity"
+  - name: experience
+    weight: 0.13
+    description: "Years of experience (ideal 3-10) blended with ML keyword density"
+  - name: statement
+    weight: 0.10
+    description: "Self-reported ML intent and startup fit from profile statement/summary"
+  - name: behavioral
+    weight: 0.09
+    description: "10-factor model: recency, response rate, verification, salary alignment, etc."
+  - name: location
+    weight: 0.05
+    description: "Preference for India tech hubs with relocation bonus"
+  - name: education
+    weight: 0.05
+    description: "Degree level, institution tier, CS-related field of study"
+
+honeypot_detection:
+  enabled: true
+  max_penalty: 0.6
+  signals:
+    - "Expert skills with low endorsements or short duration"
+    - "YOE mismatch with career history total"
+    - "Assessment score contradictions"
+    - "Future last_active_date"
+    - "Unrealistic YOE or skill counts"
+    - "Profile completeness below threshold"
+    - "Too many career entries (scripted profiles)"
+
+runtime:
+  cpu_only: true
+  max_memory_gb: 16
+  typical_seconds: 64
+  no_network: true
+
+output_format:
+  columns: ["candidate_id", "rank", "score", "reasoning"]
+  encoding: "UTF-8"
+  top_k: 100
