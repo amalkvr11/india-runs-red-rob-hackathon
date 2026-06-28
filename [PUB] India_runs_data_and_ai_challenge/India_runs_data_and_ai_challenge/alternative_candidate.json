@@ -1,0 +1,110 @@
+{
+  "candidates": [
+    {
+      "candidateid": "CAND0001",
+      "profile": {
+        "anonymized_name": "John Doe",
+        "headline": "Software Engineer",
+        "summary": "Highly motivated software engineer with 5+ years of experience.",
+        "location": "New York",
+        "country": "USA",
+        "yearsofexperience": 5.5,
+        "current_title": "Senior Software Engineer",
+        "current_company": "ABC Corporation",
+        "currentcompanysize": "1001-5000",
+        "current_industry": "Software"
+      },
+      "career_history": [
+        {
+          "company": "ABC Corporation",
+          "title": "Senior Software Engineer",
+          "start_date": "2020-01-01",
+          "end_date": null,
+          "duration_months": 30,
+          "is_current": true,
+          "industry": "Software",
+          "company_size": "1001-5000",
+          "description": "Leading the development of a cloud-based application."
+        }
+      ],
+      "education": [
+        {
+          "institution": "Stanford University",
+          "degree": "B.Sc",
+          "fieldofstudy": "Computer Science",
+          "start_year": 2015,
+          "end_year": 2019,
+          "grade": "3.8 CGPA",
+          "tier": "tier_1"
+        }
+      ],
+      "skills": [
+        {
+          "name": "Java",
+          "proficiency": "advanced",
+          "endorsements": 10,
+          "duration_months": 24
+        },
+        {
+          "name": "Python",
+          "proficiency": "intermediate",
+          "endorsements": 5,
+          "duration_months": 12
+        }
+      ]
+    },
+    {
+      "candidateid": "CAND0002",
+      "profile": {
+        "anonymized_name": "Jane Smith",
+        "headline": "Data Scientist",
+        "summary": "Experienced data scientist with a strong background in machine learning.",
+        "location": "London",
+        "country": "UK",
+        "yearsofexperience": 3.2,
+        "current_title": "Data Scientist",
+        "current_company": " DEF Startups",
+        "currentcompanysize": "11-50",
+        "current_industry": "Fintech"
+      },
+      "career_history": [
+        {
+          "company": "DEF Startups",
+          "title": "Data Scientist",
+          "start_date": "2022-06-01",
+          "end_date": null,
+          "duration_months": 12,
+          "is_current": true,
+          "industry": "Fintech",
+          "company_size": "11-50",
+          "description": "Working on developing predictive models for financial forecasting."
+        }
+      ],
+      "education": [
+        {
+          "institution": "University of Cambridge",
+          "degree": "M.Sc",
+          "fieldofstudy": "Data Science",
+          "start_year": 2020,
+          "end_year": 2022,
+          "grade": "Distinction",
+          "tier": "tier_1"
+        }
+      ],
+      "skills": [
+        {
+          "name": "Python",
+          "proficiency": "advanced",
+          "endorsements": 15,
+          "duration_months": 24
+        },
+        {
+          "name": "R",
+          "proficiency": "intermediate",
+          "endorsements": 8,
+          "duration_months": 18
+        }
+      ]
+    }
+  ]
+}

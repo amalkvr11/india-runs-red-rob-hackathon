@@ -16,13 +16,13 @@ REFERENCE_DATE = date(2026, 6, 1)  # approximate "now" for the dataset
 # Composite scorer weights  (must sum to 1.0)
 # ============================================================================
 SCORER_WEIGHTS = {
-    "title_role":        0.22,
-    "skills":            0.18,
-    "career_quality":    0.18,
-    "experience":        0.13,
-    "statement":         0.10,
-    "behavioral":        0.09,
-    "location":          0.05,
+    "title_role":        0.20,
+    "skills":            0.22,
+    "career_quality":    0.20,
+    "experience":        0.15,
+    "statement":         0.08,
+    "behavioral":        0.06,
+    "location":          0.04,
     "education":         0.05,
 }
 

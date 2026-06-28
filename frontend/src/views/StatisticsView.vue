@@ -95,16 +95,75 @@ const pieSeries = computed(() => {
   return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([, v]) => v)
 })
 const pieOptions = computed(() => ({
-  chart: { fontFamily: 'Inter' },
+  chart: { 
+    fontFamily: 'Inter',
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800
+    }
+  },
   labels: (() => {
     if (!store.results?.length) return []
     const m = {}; store.results.forEach(r => { const loc = r.location?.split(',')[0] || 'Unknown'; m[loc] = (m[loc] || 0) + 1 })
     return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k)
   })(),
   colors: ['#00bcd4', '#ff9800', '#4caf50', '#ef5350', '#ab47bc', '#26c6da', '#66bb6a', '#ff7043'],
-  dataLabels: { enabled: true, style: { colors: '#fff', fontSize: '11px' } },
-  legend: { position: 'bottom', labels: { colors: '#e4e6f0' } },
-  tooltip: { theme: 'dark' },
+  dataLabels: {
+    enabled: true,
+    style: {
+      colors: ['#fff'],
+      fontSize: '12px',
+      fontWeight: 600
+    },
+    dropShadow: {
+      enabled: true,
+      top: 1,
+      left: 1,
+      blur: 2,
+      opacity: 0.8
+    }
+  },
+  legend: {
+    position: 'bottom',
+    fontSize: '12px',
+    fontWeight: 500,
+    labels: {
+      colors: '#e4e6f0',
+      useSeriesColors: false
+    },
+    markers: {
+      size: 8,
+      strokeWidth: 0
+    },
+    itemMargin: {
+      horizontal: 8,
+      vertical: 4
+    }
+  },
+  stroke: {
+    show: true,
+    width: 2,
+    colors: ['#1e2244']
+  },
+  tooltip: {
+    enabled: true,
+    theme: 'dark',
+    fillSeriesColor: false,
+    y: {
+      formatter: function(value, { seriesIndex, w }) {
+        const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+        const percentage = ((value / total) * 100).toFixed(1)
+        return `${value} candidates (${percentage}%)`
+      }
+    }
+  },
+  plotOptions: {
+    pie: {
+      expandOnClick: true,
+      customScale: 1
+    }
+  }
 }))
 
 // Scatter
@@ -148,9 +207,89 @@ const dimStatsData = computed(() => {
 </script>
 
 <style scoped>
-.stats-view { display: flex; flex-direction: column; gap: 1.25rem; }
-.stats-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-@media (max-width: 900px) { .stats-charts-grid { grid-template-columns: 1fr; } }
-.dim-stats-table { font-size: 0.85rem; }
-.empty-chart { display: flex; align-items: center; justify-content: center; height: 320px; color: var(--p-surface-500); font-size: 0.9rem; }
+.stats-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stats-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .stats-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dim-stats-table {
+  font-size: 0.85rem;
+  border: 1px solid var(--p-surface-100);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dim-stats-table :deep(.p-datatable-thead > tr > th) {
+  background: var(--p-surface-50);
+  color: var(--p-surface-700);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+}
+
+.dim-stats-table :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.875rem 0.75rem;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+}
+
+.dim-stats-table :deep(.p-datatable-tbody > tr:hover) {
+  background: var(--p-surface-25);
+}
+
+.empty-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  color: var(--p-surface-500);
+  font-size: 0.95rem;
+  background: var(--p-surface-25);
+  border-radius: 12px;
+  border: 2px dashed var(--p-surface-200);
+}
+
+.empty-chart i {
+  margin-bottom: 0.75rem;
+  opacity: 0.6;
+}
+
+.stats-view :deep(.p-card) {
+  border: 1px solid var(--p-surface-100);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.stats-view :deep(.p-card):hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.stats-view :deep(.p-card-title) {
+  font-size: 0.9rem;
+  color: var(--p-surface-700);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stats-view :deep(.p-card-title i) {
+  color: var(--p-primary-500);
+}
 </style>
