@@ -1,9 +1,5 @@
- *[PUB]*
-!api/
-!frontend/
-!config.py
-!ranker.py
-!scorers.py
-!honeypot.py
-!requirements.txt
-!vercel.json
+[PUB]*
+__pycache__/
+*.pyc
+.git/
+node_modules/
