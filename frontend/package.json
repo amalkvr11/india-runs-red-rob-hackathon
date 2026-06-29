@@ -15,7 +15,7 @@
     "primevue": "^4.3.0",
     "@primevue/themes": "^4.3.0",
     "primeicons": "^7.0.0",
-    "apexcharts": "^4.5.0",
+    "apexcharts": "^5.10.0",
     "vue3-apexcharts": "^1.11.0",
     "animate.css": "^4.1.1",
     "@vueuse/core": "^12.0.0"
