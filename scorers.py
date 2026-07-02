@@ -120,6 +120,8 @@ def score_skills(candidate: dict) -> dict:
     skills = candidate.get("skills", [])
     profile = candidate.get("profile", {})
     career_history = candidate.get("career_history", [])
+    signals = candidate.get("redrob_signals", {})
+    assessment_scores = signals.get("skill_assessment_scores", {})
     
     for s in skills:
         if s.get("proficiency", "").lower() not in PROFICIENCY_WEIGHTS:
@@ -130,23 +132,17 @@ def score_skills(candidate: dict) -> dict:
     ).lower()
     has_ml_career = any(kw in ml_desc_text for kw in ["ml", "machine learning", "ai", "deep learning", "nlp"])
     
-    group_scores = {}
-    group_weighted = {}
-    matched_skills_detail = []
-    
     core_groups = ["embeddings_retrieval", "vector_db", "nlp_llm"]
     adj_groups = ["ml_frameworks", "ml_eval", "python"]
     infra_groups = ["data_infra"]
 
-    for skill in skills:
-        name = skill.get("name", "").lower().strip()
-        if not name:
-            continue
-        
+    def _calc_skill_quality(skill: dict) -> float:
+        """Calculate skill quality with endorsement penalties and assessment boost."""
         prof = skill.get("proficiency", "intermediate").lower()
         prof_w = PROFICIENCY_WEIGHTS.get(prof, 0.5)
         
         endorsements = skill.get("endorsements", 0)
+        # Apply endorsement penalty for expert/advanced skills with few endorsements
         if prof in ("expert", "advanced") and endorsements < 5:
             prof_w *= 0.6
         
@@ -155,34 +151,54 @@ def score_skills(candidate: dict) -> dict:
         dur = skill.get("duration_months", 0)
         dur_w = min(dur / 24, 1.0)
         
-        skill_quality = 0.4 * prof_w + 0.35 * end_w + 0.25 * dur_w
-    
+        # Base quality calculation
+        quality = 0.4 * prof_w + 0.35 * end_w + 0.25 * dur_w
+        
+        # Incorporate assessment scores (positive boost only, not penalty)
+        skill_name = skill.get("name", "").lower().strip()
+        if skill_name in assessment_scores:
+            assessment = assessment_scores[skill_name]
+            if assessment is not None:
+                # Normalize assessment to 0-1 and use as quality multiplier
+                assessment_normalized = min(assessment / 100, 1.0)
+                # Blend assessment with calculated quality (assessment can boost but not overly penalize)
+                quality = quality * 0.7 + assessment_normalized * 0.3
+        
+        return quality
+
     total_core_score = 0.0
     core_count = 0
     total_adj_score = 0.0
     adj_count = 0
+    group_match_counts = {}  # Track number of skills matched per group for breadth bonus
     
     for group_name, max_score, keywords in SKILL_GROUPS:
         group_matched = []
         group_score = 0.0
+        group_skills_qualities = []  # Track individual skill qualities in group
         
         for skill in skills:
             sn = (skill.get("name") or "").lower().strip()
             for kw in keywords:
                 if kw.lower() in sn:
-                    prof = skill.get("proficiency", "intermediate").lower()
-                    prof_w = PROFICIENCY_WEIGHTS.get(prof, 0.5)
-                    endorsements = skill.get("endorsements", 0)
-                    end_w = min(endorsements / 30, 1.0)
-                    dur = skill.get("duration_months", 0)
-                    dur_w = min(dur / 24, 1.0)
-                    quality = 0.4 * prof_w + 0.35 * end_w + 0.25 * dur_w
+                    quality = _calc_skill_quality(skill)
+                    group_skills_qualities.append(quality)
                     group_score += quality
                     group_matched.append(sn)
                     break
         
         if group_matched:
-            capped_score = min(group_score / len(group_matched), 1.0)
+            # Breadth bonus: reward knowing multiple tools in the same group
+            # Base score on average quality, but add bonus for breadth
+            base_score = group_score / len(group_matched)
+            breadth_bonus = 0.0
+            if len(group_matched) >= 2:
+                # +5% for each additional skill beyond the first, up to +15%
+                breadth_bonus = min((len(group_matched) - 1) * 0.05, 0.15)
+            
+            capped_score = min(base_score * (1 + breadth_bonus), 1.0)
+            group_match_counts[group_name] = len(group_matched)
+            
             if group_name in core_groups:
                 total_core_score += capped_score
                 core_count += 1
@@ -210,7 +226,7 @@ def score_skills(candidate: dict) -> dict:
         if yoe >= 3:
             final_score *= 0.85
     
-    unmatched_ml_skills = []
+    # Unmatched ML skills bonus
     for skill in skills:
         name = (skill.get("name") or "").lower()
         if any(ml in name for ml in ["ml", "ai", "machine", "deep", "nlp", "neural", "llm", "gpt", "bert"]):
@@ -220,8 +236,8 @@ def score_skills(candidate: dict) -> dict:
                     found = True
                     break
             if not found:
-                prof_w = PROFICIENCY_WEIGHTS.get(skill.get("proficiency", "intermediate").lower(), 0.5)
-                final_score += 0.05 * prof_w
+                quality = _calc_skill_quality(skill)
+                final_score += 0.05 * quality
     
     final = min(final_score, 1.0)
     
@@ -239,9 +255,16 @@ def score_skills(candidate: dict) -> dict:
             for s in skills
         )])
     
+    # Add breadth info to reasoning
+    breadth_info = ""
+    if group_match_counts:
+        max_breadth = max(group_match_counts.values())
+        if max_breadth > 1:
+            breadth_info = f"; breadth_bonus={max_breadth}skills"
+    
     return {
         "score": final,
-        "reasoning": f"core={core_avg:.2f}({core_count}groups); adj={adj_avg:.2f}({adj_count}groups); matched={matched_groups[:4]}"
+        "reasoning": f"core={core_avg:.2f}({core_count}groups); adj={adj_avg:.2f}({adj_count}groups); matched={matched_groups[:4]}{breadth_info}"
     }
 
 
@@ -316,10 +339,10 @@ def score_career_quality(candidate: dict) -> dict:
             company_tenures[company] = company_tenures.get(company, 0) + e.get("duration_months", 0)
     
     current_too_long_penalty = 0.0
-    if current_tenure > 72:
-        current_too_long_penalty = 0.05
-    elif current_tenure > 96:
+    if current_tenure > 96:
         current_too_long_penalty = 0.1
+    elif current_tenure > 72:
+        current_too_long_penalty = 0.05
 
     company_diversity = 0.0
     companies = set()
