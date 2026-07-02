@@ -11,7 +11,7 @@
             <div>
               <h2>{{ candidate.candidate_id }}</h2>
               <p class="detail-title">{{ candidate.current_title }} <span class="at-text">at</span> {{ candidate.current_company }}</p>
-              <p class="detail-loc"><i class="pi pi-map-marker"></i> {{ candidate.location }}</p>
+              <p class="detail-loc"><i class="pi pi-map-marker"></i> <span class="location-name-bold">{{ candidate.location }}</span></p>
             </div>
           </div>
           <div class="header-right">
@@ -269,6 +269,11 @@ const detailRadarOptions = {
 .detail-loc i {
   font-size: 0.85rem;
   color: var(--p-green-500);
+}
+
+.location-name-bold {
+  font-weight: 600;
+  color: var(--p-surface-800);
 }
 
 .header-right {

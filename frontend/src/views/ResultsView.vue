@@ -83,7 +83,7 @@
           <template #body="{ data }">
             <div class="location-cell">
               <i class="pi pi-map-marker"></i>
-              <span>{{ data.location || 'Unknown' }}</span>
+              <span class="location-name">{{ data.location || 'Unknown' }}</span>
             </div>
           </template>
         </Column>
@@ -375,6 +375,11 @@ async function triggerRanking() {
 .location-cell i {
   font-size: 0.8rem;
   color: var(--p-green-500);
+}
+
+.location-name {
+  font-weight: 600;
+  color: var(--p-surface-800);
 }
 
 .yoe-cell {
