@@ -43,7 +43,7 @@ def title_match_score(title: str) -> tuple:
         seniority_boost = -0.05
     
     if best_score > 0:
-        return best_score + seniority_boost, best_match, "partial"
+        return min(best_score + seniority_boost, 1.0), best_match, "partial"
     
     ai_adjacent_keywords = ["ml", "ai", "data", "analytics", "algorithm", "intelligence"]
     ml_adjacent_count = sum(1 for kw in ai_adjacent_keywords if kw in title_lower)
@@ -93,13 +93,34 @@ def score_title_role(candidate: dict) -> dict:
         firm in (profile.get("current_company") or "").lower()
         for firm in CONSULTING_FIRMS
     )
-    consulting_penalty = 0.3 if has_consulting else 0.0
     
+    # Contextual consulting penalty: only heavy penalty if limited ML experience
+    consulting_penalty = 0.0
+    if has_consulting:
+        # Check if candidate has ML skills from career history
+        ml_desc_text = " ".join(
+            e.get("description", "") or "" for e in history
+        ).lower()
+        has_ml_experience = any(kw in ml_desc_text for kw in ["ml", "machine learning", "ai", "deep learning", "model", "embedding", "vector", "nlp"])
+        
+        yoe = profile.get("years_of_experience", 0)
+        
+        if has_ml_experience and ml_density > 0.3:
+            # Candidate has ML experience - minimal penalty
+            consulting_penalty = 0.08
+        elif yoe <= 3:
+            # Junior candidate at consulting firm - moderate penalty
+            consulting_penalty = 0.15
+        else:
+            # Senior at consulting firm without clear ML experience
+            consulting_penalty = 0.25
+    
+    # Further reduce penalty if company name suggests tech/AI focus
     if current_company := (profile.get("current_company") or "").lower():
-        startup_indicators = ["startup", "labs", "ai", "ml", "tech", "software", "data"]
+        startup_indicators = ["startup", "labs", "ai", "ml", "tech", "software", "data", "digital"]
         if any(ind in current_company for ind in startup_indicators):
             if has_consulting:
-                consulting_penalty = min(consulting_penalty, 0.15)
+                consulting_penalty = min(consulting_penalty, 0.10)
     
     final = max(0.0, raw_score - consulting_penalty)
     
@@ -409,9 +430,12 @@ def score_experience(candidate: dict) -> dict:
         if excess_yoe <= 3:
             exp_score = 0.95
         elif excess_yoe <= 6:
-            exp_score = 0.85
+            exp_score = 0.90  # Increased from 0.85
+        elif excess_yoe <= 10:
+            exp_score = 0.80  # Less aggressive penalty
         else:
-            exp_score = max(0.5, 1.0 - excess_yoe * 0.03)
+            # Very senior candidates - minimal decay after 10+ years excess
+            exp_score = max(0.65, 0.80 - (excess_yoe - 10) * 0.01)
 
     ml_relevant_yoe = 0
     ai_ml_keywords = ["ml engineer", "ai engineer", "machine learning", "deep learning", 
@@ -770,7 +794,9 @@ def score_education(candidate: dict) -> dict:
                     if any(d in d2 for d in ["b.tech", "btech", "b.e.", "b.sc"]):
                         best_combined = min(best_combined + 0.02, 0.35)
 
-    final = min(best_combined, 0.35)
+    # Education cap increased from 0.35 to 0.50 to give it meaningful weight
+    # With education weight of 0.05, max contribution is now 0.025 instead of 0.0175
+    final = min(best_combined, 0.50)
     return {
         "score": final,
         "reasoning": "; ".join(details)

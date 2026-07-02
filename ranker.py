@@ -19,6 +19,14 @@ from honeypot import detect_honeypot
 
 logger = logging.getLogger(__name__)
 
+# Validate scorer weights sum to 1.0
+WEIGHT_SUM = sum(SCORER_WEIGHTS.values())
+if abs(WEIGHT_SUM - 1.0) > 0.001:
+    logger.warning(
+        "SCORER_WEIGHTS sum to %.4f, expected 1.0. This may cause scoring inconsistencies.",
+        WEIGHT_SUM
+    )
+
 SCORER_FUNCTIONS = {
     "title_role": score_title_role,
     "skills": score_skills,
@@ -131,7 +139,17 @@ def score_candidate(candidate: dict) -> dict:
 
     for name, func in SCORER_FUNCTIONS.items():
         result = func(candidate)
-        sub_scores[name] = result["score"]
+        score = result["score"]
+        
+        # Validate score is in valid range [0, 1]
+        if score < 0 or score > 1:
+            logger.warning(
+                "Scorer %s returned score %.4f outside [0,1] range for candidate %s. Clamping.",
+                name, score, candidate.get("candidate_id", "unknown")
+            )
+            score = max(0.0, min(score, 1.0))
+        
+        sub_scores[name] = score
         reasonings[name] = result["reasoning"]
 
     honeypot = detect_honeypot(candidate)
