@@ -166,6 +166,67 @@ def download_csv():
     )
 
 
+@app.get("/api/candidate/{candidate_id}")
+def get_candidate_detail(candidate_id: str):
+    """Get detailed information about a specific candidate."""
+    if not ranking_cache["cached"] or not ranking_cache["results"]:
+        raise HTTPException(404, "No results. POST /api/rank first.")
+    
+    for r in ranking_cache["results"]:
+        if r["candidate_id"] == candidate_id:
+            return r
+    
+    raise HTTPException(404, f"Candidate {candidate_id} not found")
+
+
+@app.get("/api/explain/{candidate_id}")
+def explain_candidate(candidate_id: str):
+    """Get SHAP-like explanation for a candidate's ranking."""
+    from explainability import ShapExplainer
+    
+    if not ranking_cache["cached"] or not ranking_cache["results"]:
+        raise HTTPException(404, "No results. POST /api/rank first.")
+    
+    for r in ranking_cache["results"]:
+        if r["candidate_id"] == candidate_id:
+            explainer = ShapExplainer()
+            explanation = explainer.explain_candidate(
+                r,
+                r.get("sub_scores", {}),
+                r.get("score", 0),
+                r.get("honeypot", {}).get("penalty", 0)
+            )
+            return explanation
+    
+    raise HTTPException(404, f"Candidate {candidate_id} not found")
+
+
+@app.get("/api/ml-similarity/{candidate_id}")
+def get_ml_similarity(candidate_id: str):
+    """Get ML-based semantic similarity score for a candidate."""
+    from ml_similarity import score_ml_similarity
+    
+    if not ranking_cache["cached"] or not ranking_cache["results"]:
+        raise HTTPException(404, "No results. POST /api/rank first.")
+    
+    for r in ranking_cache["results"]:
+        if r["candidate_id"] == candidate_id:
+            # Need to reload full candidate data
+            from ranker import load_candidates
+            full_candidates = load_candidates(str(DEFAULT_JSONL))
+            for fc in full_candidates:
+                if fc["candidate_id"] == candidate_id:
+                    return score_ml_similarity(fc)
+    
+    raise HTTPException(404, f"Candidate {candidate_id} not found")
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "healthy", "cached": ranking_cache["cached"]}
+
+
 if __name__ == "__main__":
     import uvicorn
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
